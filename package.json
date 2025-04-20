@@ -1,8 +1,11 @@
 {
-  "name": "",
+  "name": "marking-rubric",
+  "homepage": "https://SeanMASilva.github.io/marking-rubric",
   "private": true,
   "type": "module",
   "scripts": {
+    "predeploy": "yarn run build",
+    "deploy": "gh-pages -d build",
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
@@ -12,9 +15,11 @@
     "@react-router/node": "^7.5.0",
     "@react-router/serve": "^7.5.0",
     "isbot": "^5.1.17",
-    "react": "^19.0.0",
+    "lodash": "^4.17.21",
+    "react": "^19.1.0",
     "react-dom": "^19.0.0",
-    "react-router": "^7.5.0"
+    "react-router": "^7.5.0",
+    "styled-components": "^6.1.17"
   },
   "devDependencies": {
     "@react-router/dev": "^7.5.0",
@@ -22,6 +27,7 @@
     "@types/node": "^20",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
+    "gh-pages": "^6.3.0",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2",
