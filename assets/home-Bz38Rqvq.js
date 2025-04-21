@@ -1,1 +1,0 @@
-import{w as e}from"./with-props-BMr0teod.js";import{n as t}from"./chunk-LSOULM7L-Dxd1lnqy.js";import{R as r,t as o}from"./testRubric-CmLjYsso.js";function c({}){return[{title:"New React Router App"},{name:"description",content:"Welcome to React Router!"}]}const a=e(function(){return t.jsx(t.Fragment,{children:t.jsx(r,{rubric:o})})});export{a as default,c as meta};
