@@ -3,7 +3,7 @@ import { RubricTree } from "../welcome/main";
 import testRubric from "~/testRubric";
 export function meta({}) {
   return [
-    { title: "New React Router App" },
+    { title: "Marking Rubric" },
     { name: "description", content: "Welcome to React Router!" },
   ];
 }

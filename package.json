@@ -1,11 +1,11 @@
 {
   "name": "marking-rubric",
-  "homepage": "https://SeanMASilva.github.io/marking-rubric",
+  "homepage": "https://SeanMASilva.github.io/marking-rubric/",
   "private": true,
   "type": "module",
   "scripts": {
     "predeploy": "yarn run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d build/client",
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
