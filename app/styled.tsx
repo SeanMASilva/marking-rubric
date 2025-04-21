@@ -1,21 +1,17 @@
 import styled from "styled-components";
 
 const OptionMarking_ = styled.div`
-  padding-left: 1em;
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
   border: solid 1px #404040;
-`;
-const OneOfGroup_ = styled.div`
-  padding-left: 1em;
-`;
-const ManyGroup_ = styled.div`
-  padding-left: 1em;
+  background-color: light-dark(#${props => `${((15 - props?.depth) || 16)?.toString(16).repeat(3)}`},#${props => `${props.depth?.toString(16).repeat(3)}`});
 `;
 
 const GroupMarking_ = styled.div`
-  padding-left: 1em;
+  padding: 8px 0 0 1em;
   border: solid 1px #404040;
+  background-color: light-dark(#${props => `${((15 - props?.depth) || 16)?.toString(16).repeat(3)}`},#${props => `${props.depth?.toString(16).repeat(3)}`});
 `;
 const RadioInput = styled.input`
 margin-right: 8px;
@@ -40,17 +36,17 @@ const Label = styled.label`
 const Row = styled.div`
   display: flex;
   flex-direction: row;
-  padding: 8px;
 `;
 
 const Button = styled.button`
   display: block;
   padding: 8px;
   border: 1px solid #222222;
+  background-color: light-dark(#eee, #222);
   &:hover {
-    background: #444444
+    filter: brightness(150%)
   }
 `;
 
 
-export {OptionMarking_, OneOfGroup_, ManyGroup_, RadioInput, TextInput, Button, Label, GroupMarking_, Row, TextAreaInput}
+export {OptionMarking_, RadioInput, TextInput, Button, Label, GroupMarking_, Row, TextAreaInput}

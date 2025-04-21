@@ -71,13 +71,13 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   }
 
   return (
-    <GroupMarking_ style={{backgroundColor: `#${parent.length.toString(16).repeat(3)}`}}>
+    <GroupMarking_ depth={parent.length}>
       <Row>
         <TextEdit id={[...optionTree, group.id, 'name']}></TextEdit>
         <p style={{width:'0.5em'}}/>[{questionTotal[group.id]}/<NumberEdit id={[...optionTree, group.id, 'maxMark']}/>]
         {invalidMaxMarks && <p style={{paddingLeft:'0.5em'}}>[X]</p>}
       </Row>
-      {Object.values(group.options).map(option => ['many', 'single'].includes(option.type)  
+      {Object.values(group.options).sort((a, b) => a.id - b.id).map(option => ['many', 'single'].includes(option.type)  
         ? <RenderOption option={option} key={option.id} parent={newParentList}/> 
         : <RenderGroup group={option} key={option.id} parent={newParentList}/>
       )}
@@ -90,7 +90,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
             <Button onClick={addGroup('singleGroup')}>Add Mutli Choice Section</Button> :
             <Button
               onClick={handleDelete}
-              style={{backgroundColor:deleteRed}}
+              style={{backgroundColor:`light-dark(#e44,${deleteRed})`}}
             > 
               Delete
             </Button>
@@ -115,7 +115,7 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
   }, [state.rerender])
 
   return (
-    <OptionMarking_ style={{backgroundColor: `#${parent.length.toString(16).repeat(3)}`}}>
+    <OptionMarking_ depth={parent.length}>
       <Row>
         {!isEditing && <RadioInput
           type={option.type === 'single' ? 'radio' : 'checkbox'}
@@ -129,29 +129,56 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
         <TextEdit id={[...optionTree, option.id, 'name']} labelId={option.id} inputProps={{id:option.id}}/>
         <p style={{width: '1em'}}/>{'('}
         <NumberEdit id={[...optionTree, option.id, 'mark']} inputProps={{size:1}}>
-          {(value:any) => ` mark${value === 1 ? '' : 's'}`}
+          {(value:number) => <>&nbsp;{`mark${value === 1 ? '' : 's'}`}</>}
         </NumberEdit>
         {')'}
       </Row>
       {isEditing && <>
         <Row>
-        <Label>Feedback when {option.type === 'many' ? 'correct' : 'selected'}: </Label>
-          <TextAreaEdit  id={[...optionTree, option.id, 'selectedString']}/>
+          <Label htmlFor={option.id + 'selectedString'}>
+            Feedback when {option.type === 'many' ? 'correct' : 'selected'}: 
+          </Label>
+          <TextAreaEdit  id={[...optionTree, option.id, 'selectedString']} inputProps={{id: option.id + 'selectedString'}}/>
         </Row>
         {option.type === 'many' && <Row>
-          <Label>Feedback when incorrect: </Label>
-          <TextAreaEdit  id={[...optionTree, option.id, 'unselectedString']}/>
+          <Label htmlFor={option.id + 'unselectedString'}>Feedback when incorrect: </Label>
+          <TextAreaEdit  id={[...optionTree, option.id, 'unselectedString']} inputProps={{id:option.id + 'unselectedString'}}/>
         </Row>}
         <Row>
           <Button 
             onClick={handleDelete}
-            style={{backgroundColor:deleteRed}}
+            style={{backgroundColor:`light-dark(#e44,${deleteRed})`}}
           >
             Delete
           </Button>
         </Row>
       </>}
     </OptionMarking_>
+  )
+}
+
+function ButtonRow({}) {
+  const {state} = useContext(RubricContext)
+  const { importRubric } = useImportRubric()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  return (
+    <>
+      <ToggleEdit />
+      <SaveRubric />
+      <Button onClick={e => {
+        exportRubric(state)
+      }}
+      >
+        Export Rubric
+      </Button>
+      <Button onClick={e=> {
+        fileInputRef.current?.click()
+      }}>
+        Import Rubric
+      </Button>
+      <input type='file' style={{display:'none'}} ref={fileInputRef} onChange={importRubric}/>
+    </>
   )
 }
 
@@ -177,9 +204,7 @@ function ToggleEdit({}) {
 
 function FeedBack({}){
   const {state, questionTotal, dispatch} = useContext(RubricContext)
-  const { importRubric } = useImportRubric()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
+  
 
   const feedBack = mapState<string[]>((s, n, fs, d) => {
     if (n.type === 'many' || n.type === 'single') {
@@ -220,8 +245,8 @@ function FeedBack({}){
 
   return (
     <>
+      <h2>Generated Feedback</h2>
       <Row>
-        <Button onClick={goToTop}>To Top</Button>
         <Button onClick={e => {
           const data = new ClipboardItem({
             "text/plain": (feedBack.root[0]),
@@ -229,15 +254,7 @@ function FeedBack({}){
           })
           navigator.clipboard.write([data])
         }}>Copy Text</Button>
-        <Button onClick={e => {
-          exportRubric(state)
-        }}>Export Rubric</Button>
-        <Button onClick={e=> {
-          fileInputRef.current?.click()
-        }}>
-          Import Rubric
-        </Button>
-        <input type='file' style={{display:'none'}} ref={fileInputRef} onChange={importRubric}/>
+        <Button onClick={goToTop}>To Top</Button>
       </Row>
       <div dangerouslySetInnerHTML={{__html: richFeedBack.root}} />
     </>
@@ -336,15 +353,14 @@ function RubricTree({rubric: rubric_}: {rubric:rubricJson}) {
       questionTotal,
       maxActualMarks
     }}>
-      <Row>
-        <ToggleEdit />
-        <SaveRubric />
-      </Row>
       <div style={{display:'flex', flexDirection:'row'}}>
-        <div style={{width:state.isEditing ? '100%' : '50%', padding: '8px'}}>
+        <div style={{display:'flex', flexDirection:'column', padding: '8px', width:state.isEditing ? '100%' : '50%'}}>
+          <Row>
+            <ButtonRow />
+          </Row>
           <RenderGroup group={state.root} parent={[]}/>
         </div>
-        {!state.isEditing && <div style={{width: '50%', padding: '8px'}}>
+        {!state.isEditing && <div style={{padding: '8px', width:'50%'}}>
           <FeedBack />
         </div>}
       </div>

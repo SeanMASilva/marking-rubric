@@ -21,6 +21,7 @@ function NumberEdit({id, children, labelId, inputProps} : {id: string[], childre
         appearance: 'textfield', 
         MozAppearance: 'textfield', 
         width: 'auto',
+        border: '0',
         ...inputProps?.style
       }
     }
