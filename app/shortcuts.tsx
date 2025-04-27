@@ -1,15 +1,33 @@
-import { useContext, useEffect, useState } from "react"
-import RubricContext, { type dispatch } from "./context"
+import { useContext, useEffect, useRef, useState } from "react"
+import RubricContext from "./context"
+import { Button, Card } from "./styled"
 
 function getCleanRubric(state: Record<string, any>): rubricJson {
   const cleanState:rubricJson = {id: 'root', options: {...state.root.options}, type:'manyGroup', name:state.root.name, maxMark:state.root.maxMark}
   return cleanState
 }
 
+function useToggleEdit() {
+  const {state, dispatch} = useContext(RubricContext)
+  useEffect(() => {
+    const f = (e:KeyboardEvent) => {
+      if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        dispatch({value: !state.isEditing, type:'set', id:'isEditing'})
+      }
+    }
+    document.addEventListener('keydown', f)
+    return () => document.removeEventListener('keydown', f)
+  }, [state])
+}
+
 function goToTop() {
   const firstCheckBox = document.getElementsByClassName("checkBox")?.[0] as HTMLInputElement
   firstCheckBox?.focus() 
 }
+
+
+
 
 function useGoToTop() {
   useEffect(() => {
@@ -87,5 +105,25 @@ function useImportRubric() {
   return {importRubric}
 }
 
+function ShortCuts({}) {
+  useGoToTop()
+  useSaveRubric()
+  useToggleEdit()
 
-export {goToTop, useGoToTop, saveRubric, useSaveRubric, exportRubric, useImportRubric}
+  const modalRef = useRef<HTMLDialogElement>(null)
+  return (
+    <>
+      <Button onClick={e => {e.stopPropagation(); e.preventDefault(); modalRef.current?.showModal();}}>
+        Show Shortcuts
+      </Button>
+      <Card ref={modalRef} title="Shortcuts">
+        <p>Ctrl + S: Save rubric to local storage</p>
+        <p>Ctrl + C: Copy generated feedback to clipboard</p>
+        <p>Ctrl + G: Focus the top check box</p>
+        <p>Ctrl + E: Toggle Edit mode</p>
+      </Card>
+    </>
+  )
+}
+
+export {goToTop, useGoToTop, saveRubric, useSaveRubric, exportRubric, useImportRubric, ShortCuts}

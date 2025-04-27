@@ -4,7 +4,7 @@ type SingleOptionGroup =  {
   type: 'singleGroup'
   id: string;
   name?: string;
-  maxMark: number;
+  maxMark: string;
   options: Record<string, SingleOption | ManyOptionGroup>;
 }
 
@@ -12,7 +12,7 @@ type ManyOptionGroup = {
   type: 'manyGroup'
   id: string;
   name?: string;
-  maxMark: number;
+  maxMark: string;
   options: Record<string, ManyOption | ManyOptionGroup | SingleOptionGroup>;
 }
 
@@ -24,7 +24,7 @@ type SingleOption = {
   type: 'single';
   id: string;
   name: string;
-  mark: number;
+  mark: string;
   selectedString ?: string;
   unselectedString ?: string;
   checked?: boolean;
@@ -33,7 +33,7 @@ type ManyOption = {
   type: 'many';
   id: string;
   name: string;
-  mark: number;
+  mark: string;
   selectedString ?: string;
   unselectedString ?: string;
   checked?: boolean;

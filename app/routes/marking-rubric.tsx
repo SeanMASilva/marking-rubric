@@ -1,6 +1,5 @@
 import type { Route } from "./+types/home";
 import { RubricTree } from "../welcome/main";
-import testRubric from "~/testRubric";
 export function meta({}) {
   return [
     { title: "Marking Rubric" },
@@ -12,7 +11,7 @@ export default function Home() {
   
   return (
     <>
-      <RubricTree rubric={testRubric}/>
+      <RubricTree />
     </>
   );
 }

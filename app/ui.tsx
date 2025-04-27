@@ -2,10 +2,10 @@ import React, {useContext} from "react"
 import RubricContext from "./context"
 import { Button, Label, TextAreaInput, TextInput } from "./styled"
 import _ from "lodash"
-import { saveRubric, useSaveRubric } from "./shortcuts"
+import { saveRubric } from "./shortcuts"
 const {get, isFunction} = _
 
-const deleteRed = "#a00000"
+const deleteRed = 'light-dark(#e44, #a00000)'
 
 function NumberEdit({id, children, labelId, inputProps} : {id: string[], children?:any, labelId?:string, inputProps?:any}) {
   return TextEdit({
@@ -36,7 +36,7 @@ function TextEdit({id, children, labelId, inputProps} : {id: string[], children?
       {isEditing 
         ? <TextInput 
           value={value} 
-          onChange={e => dispatch({value: inputProps?.type === 'number' ? Number(e.target.value) : e.target.value, type:'set', id})}
+          onChange={e => dispatch({value: e.target.value, type:'set', id})}
           {...inputProps}
           />
         : <Label htmlFor={labelId}>{value}</Label>
@@ -66,7 +66,6 @@ function TextAreaEdit({id, children, labelId, inputProps} : {id: string[], child
 
 function SaveRubric({}) {
   const {state} = useContext(RubricContext)
-  useSaveRubric()
   return (
     <Button onClick={() => saveRubric(state)}>Save Rubric</Button>
   )

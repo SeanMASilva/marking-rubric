@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import React from "react";
 
 const OptionMarking_ = styled.div`
   padding: 4px 8px;
@@ -38,6 +39,36 @@ const Row = styled.div`
   flex-direction: row;
 `;
 
+const Card_ = styled.dialog`
+  &[open]{
+    display: flex;
+  }
+  place-self: center;
+  min-width: 100px;
+  min-height: 100px;
+`;
+
+function Card({children, title, ref} : {children: React.ReactNode, title: string, ref:React.RefObject<HTMLDialogElement | null>}) {
+  return (
+    <Card_ ref={ref} onClick={e => {
+      const target = e.target as HTMLElement
+      if (target.isEqualNode(ref.current)) {
+        ref.current?.close()
+      }
+    }}>
+      <div style={{
+        flex: '0 1 auto',
+      }}>
+        <Row style={{justifyContent:'space-between'}}>
+          <h2 style={{margin:'8px'}}>{title}</h2>
+          <Button onClick={() => ref.current?.close()}>X</Button>
+        </Row>
+        <Row style={{height: '2px', backgroundColor:"light-dark(#ddd, #333)"}}></Row>
+        <div style={{padding:'8px'}}> {children}</div>
+      </div>
+    </Card_>
+  )
+}
 const Button = styled.button`
   display: block;
   padding: 8px;
@@ -49,4 +80,4 @@ const Button = styled.button`
 `;
 
 
-export {OptionMarking_, RadioInput, TextInput, Button, Label, GroupMarking_, Row, TextAreaInput}
+export {Card, OptionMarking_, RadioInput, TextInput, Button, Label, GroupMarking_, Row, TextAreaInput}

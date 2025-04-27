@@ -5,28 +5,28 @@ import { TextEdit, NumberEdit, deleteRed, TextAreaEdit, SaveRubric } from "~/ui"
 import RubricContext from "~/context";
 import type { FormAction, dispatch, NodeId } from "~/context";
 import _ from "lodash";
-import { exportRubric, goToTop, saveRubric, useGoToTop, useImportRubric, useSaveRubric } from "~/shortcuts";
+import { exportRubric, goToTop, ShortCuts, useImportRubric } from "~/shortcuts";
 const {set, get, isFunction, unset} = _
 
 const blankManyGroup: ManyOptionGroup = {
   id: '',
   type:'manyGroup',
   name: 'Label',
-  maxMark: 1,
+  maxMark: '1',
   options: {} // Replace these objects to avoid mutation issues.
 }
 const blankSingleGroup: SingleOptionGroup = {
   id: '',
   type:'singleGroup',
   name: 'Label',
-  maxMark: 1,
+  maxMark: '1',
   options: {}
 }
 const blankManyOption: ManyOption = {
   id: '',
   type: 'many',
   name: 'Label',
-  mark: 1,
+  mark: '1',
   selectedString: ' ',
   unselectedString: ' ',
 }
@@ -34,7 +34,7 @@ const blankSingleOption: SingleOption = {
   id: '',
   type: 'single',
   name: 'Label',
-  mark: 1,
+  mark: '1',
   selectedString: ' ',
   unselectedString: ' ',
 }
@@ -42,7 +42,7 @@ const defaultRubric: rubricJson = {
   id: 'root',
   type: 'manyGroup',
   name: 'Overall',
-  maxMark: 0,
+  maxMark: '1',
   options: {}
 }
 
@@ -50,7 +50,8 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const newParentList = [...parent, group.id]
   const optionTree = parent.flatMap(str => [str, 'options'])
   const {questionTotal, maxActualMarks, isEditing, dispatch} = useContext(RubricContext)
-  const invalidMaxMarks = maxActualMarks[group.id] !== group.maxMark
+  console.log(maxActualMarks[group.id] ,group.maxMark)
+  const invalidMaxMarks = maxActualMarks[group.id].toString() !== group.maxMark
 
   function addPoint(e:any) {
     const newId = Date.now().toString()
@@ -71,11 +72,10 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   }
 
   return (
-    <GroupMarking_ depth={parent.length}>
+    <GroupMarking_ depth={parent.length} style={{backgroundColor: invalidMaxMarks ? deleteRed : undefined}}>
       <Row>
         <TextEdit id={[...optionTree, group.id, 'name']}></TextEdit>
         <p style={{width:'0.5em'}}/>[{questionTotal[group.id]}/<NumberEdit id={[...optionTree, group.id, 'maxMark']}/>]
-        {invalidMaxMarks && <p style={{paddingLeft:'0.5em'}}>[X]</p>}
       </Row>
       {Object.values(group.options).sort((a, b) => a.id - b.id).map(option => ['many', 'single'].includes(option.type)  
         ? <RenderOption option={option} key={option.id} parent={newParentList}/> 
@@ -90,7 +90,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
             <Button onClick={addGroup('singleGroup')}>Add Mutli Choice Section</Button> :
             <Button
               onClick={handleDelete}
-              style={{backgroundColor:`light-dark(#e44,${deleteRed})`}}
+              style={{backgroundColor:deleteRed}}
             > 
               Delete
             </Button>
@@ -129,7 +129,7 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
         <TextEdit id={[...optionTree, option.id, 'name']} labelId={option.id} inputProps={{id:option.id}}/>
         <p style={{width: '1em'}}/>{'('}
         <NumberEdit id={[...optionTree, option.id, 'mark']} inputProps={{size:1}}>
-          {(value:number) => <>&nbsp;{`mark${value === 1 ? '' : 's'}`}</>}
+          {(value:string) => <>&nbsp;{`mark${value === '1' ? '' : 's'}`}</>}
         </NumberEdit>
         {')'}
       </Row>
@@ -177,6 +177,7 @@ function ButtonRow({}) {
       }}>
         Import Rubric
       </Button>
+      <ShortCuts />
       <input type='file' style={{display:'none'}} ref={fileInputRef} onChange={importRubric}/>
     </>
   )
@@ -185,16 +186,6 @@ function ButtonRow({}) {
 function ToggleEdit({}) {
   const {state, dispatch} = useContext(RubricContext)
   
-  function f(e:KeyboardEvent) {
-    if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      dispatch({value: !state.isEditing, type:'set', id:'isEditing'})
-    }
-  }
-  useEffect(() => {
-    document.addEventListener('keydown', f)
-    return () => document.removeEventListener('keydown', f)
-  }, [state.isEditing])
   return (
     <Button onClick={e => dispatch({value: !state.isEditing, type:'set', id:'isEditing'})}>
       Edit Rubric
@@ -322,7 +313,7 @@ const findParent = (state:Group, node:Group | Option): Group|null => {
 }
 
 
-function RubricTree({rubric: rubric_}: {rubric:rubricJson}) {
+function RubricTree({}) {
 
   const rubric: rubricJson = JSON.parse(window.localStorage.getItem("rubric") as string) || defaultRubric
 
@@ -331,19 +322,17 @@ function RubricTree({rubric: rubric_}: {rubric:rubricJson}) {
   const questionTotal = mapState((s, n, fs:Record<string, number>) => {
     return (n.type === 'many' || n.type === 'single') 
     ? s === true
-      ? n.mark 
+      ? +n.mark 
       : 0 
     : Object.keys(n.options).reduce((p, c) => p + fs[c], 0)}
   , state)
   const maxActualMarks = mapState((s, n, fs:Record<string, number>) => {
     return (n.type === 'many' || n.type === 'single') 
-    ?  n.mark 
+    ?  +n.mark 
     : (n.type === 'manyGroup')
     ? Object.keys(n.options).reduce((p, c) => p + fs[c], 0)
     : Math.max(...Object.keys(n.options).map(k => fs[k]))
   }, state)
-
-  useGoToTop()
 
   return (
     <RubricContext.Provider value={{
