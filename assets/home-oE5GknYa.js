@@ -1,1 +1,0 @@
-import{w as r}from"./with-props-BMr0teod.js";import{n as t}from"./chunk-LSOULM7L-Dxd1lnqy.js";import{R as e,t as o}from"./testRubric-2XZxJ8yG.js";function c({}){return[{title:"Marking Rubric"},{name:"description",content:"Welcome to React Router!"}]}const a=r(function(){return t.jsx(t.Fragment,{children:t.jsx(e,{rubric:o})})});export{a as default,c as meta};
