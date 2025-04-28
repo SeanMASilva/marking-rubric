@@ -204,7 +204,7 @@ function FeedBack({}){
       else if (s === false) return n.unselectedString ? [n.name + ": " + n.unselectedString + `[0/${maxMark}]`] : [n.name + ` [0/${n.mark}]`]
       else return []
     } else {
-      return [[...[n.name ? (n.name + ` [${questionTotal[n.id]}/${n.maxMark}]`): []], ...Object.keys(n.options).map(key => fs[key])].join("\n")]
+      return Object.values(s).length ?  [[...[n.name ? (n.name + ` [${questionTotal[n.id]}/${n.maxMark}]`): []], ...Object.keys(n.options).map(key => fs[key])].join("\n")] : []
     }
   })
   const richFeedBack = mapState<string[]>((s, n, fs, d) => {
@@ -214,7 +214,7 @@ function FeedBack({}){
       else if (s === false) return n.unselectedString ? ["<p><strong>" + n.name + ":</strong> " + n.unselectedString + ` <strong>[0/${maxMark}]</strong></p>`] : []
       else return []
     } else {
-      return [[...[n.name ? ("<h3>" + n.name + ` [${questionTotal[n.id]}/${n.maxMark}]` + "</h3>"): []], ...Object.keys(n.options).map(key => fs[key])].join("\n")]
+      return Object.values(s).length ? [[...[n.name ? ("<h3>" + n.name + ` [${questionTotal[n.id]}/${n.maxMark}]` + "</h3>"): []], ...Object.keys(n.options).map(key => fs[key])].join("\n")] : []
     }
   })
   useEffect(() => {
