@@ -50,7 +50,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const newParentList = [...parent, group.id]
   const optionTree = parent.flatMap(str => [str, 'options'])
   const {questionTotal, maxActualMarks, isEditing, dispatch} = useContext(RubricContext)
-  console.log(maxActualMarks[group.id] ,group.maxMark)
+
   const invalidMaxMarks = maxActualMarks[group.id].toString() !== group.maxMark
 
   function addPoint(e:any) {
@@ -259,20 +259,19 @@ const reducer:formReducer = (state, action) => {
   if (action.type === 'mark') {
     set(newState, action.id, action.value)
     // Make sure or values are unique in the group
-    const orCheck = (state:any, path:any, node:any, isOrParent: boolean):any => {
+    const orCheck = (state:any, path:any, node:Group|Option):any => {
       const [id, ...restPath] = path
       if (!id) return state
+      node = node as Group
       const nextNode = node.options[id]
       const nextValue = state[id]
-      if (nextNode.type === 'singleGroup') {
-        return {...state, [id]: orCheck(nextValue, restPath, nextNode, true)}
+      if (node.type === 'singleGroup') {
+        return {[id]: orCheck(nextValue, restPath, nextNode)}
       }
-      if (isOrParent) {
-        return {[id]: orCheck(nextValue, restPath, nextNode, false)}
-      }
-      return {...state, [id]:orCheck(nextValue, restPath, nextNode, false)}
+      const defaultChecked = Object.fromEntries(Object.entries(node.options).map(([key, _]) => ([key, false])))
+      return {...defaultChecked, ...state, [id]:orCheck(nextValue, restPath, nextNode)}
     }
-    return {...newState, root: {...newState.root, ...orCheck(newState.root, action.id.slice(1), newState.root, false)}}
+    return {...newState, root: {...newState.root, ...orCheck(newState.root, action.id.slice(1), newState.root)}}
   }
   else if (action.type === 'set') {
     set(newState, action.id, action.value)
