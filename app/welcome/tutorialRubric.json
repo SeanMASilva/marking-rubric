@@ -1,0 +1,184 @@
+{
+  "id": "root",
+  "options": {
+    "1747811405809": {
+      "id": "1747811405809",
+      "type": "manyGroup",
+      "name": "This is a multiple choice section",
+      "maxMark": "3",
+      "options": {
+        "1747811412316": {
+          "id": "1747811412316",
+          "type": "many",
+          "name": "You can independently select multiple 'things' here.",
+          "mark": "1",
+          "selectedString": " ",
+          "unselectedString": " "
+        },
+        "1747811428845": {
+          "id": "1747811428845",
+          "type": "many",
+          "name": "Those 'things' also include single choice sections",
+          "mark": "1",
+          "selectedString": " ",
+          "unselectedString": " "
+        },
+        "1747811439181": {
+          "id": "1747811439181",
+          "type": "singleGroup",
+          "name": "Like this one",
+          "maxMark": "1",
+          "options": {
+            "1747811444044": {
+              "id": "1747811444044",
+              "type": "single",
+              "name": "Pick only one of me",
+              "mark": "1",
+              "selectedString": " ",
+              "unselectedString": " "
+            },
+            "1747811449705": {
+              "id": "1747811449705",
+              "type": "single",
+              "name": "Or me!",
+              "mark": "1",
+              "selectedString": " ",
+              "unselectedString": " "
+            }
+          }
+        }
+      }
+    },
+    "1747811574644": {
+      "id": "1747811574644",
+      "type": "singleGroup",
+      "name": "Inside single choice sections.",
+      "maxMark": "3",
+      "options": {
+        "1747811584322": {
+          "id": "1747811584322",
+          "type": "single",
+          "name": "You can have single points",
+          "mark": "3",
+          "selectedString": " ",
+          "unselectedString": " "
+        },
+        "1747811597045": {
+          "id": "1747811597045",
+          "type": "single",
+          "name": "Or even ",
+          "mark": "1",
+          "selectedString": " ",
+          "unselectedString": " "
+        },
+        "1747811601347": {
+          "id": "1747811601347",
+          "type": "manyGroup",
+          "name": "A multiple choice group",
+          "maxMark": "2",
+          "options": {
+            "1747811608132": {
+              "id": "1747811608132",
+              "type": "many",
+              "name": "But if you pick me",
+              "mark": "2",
+              "selectedString": " ",
+              "unselectedString": " "
+            },
+            "1747811614540": {
+              "id": "1747811614540",
+              "type": "many",
+              "name": "Then you can't pick the options outside of my group >:D",
+              "mark": "0",
+              "selectedString": " ",
+              "unselectedString": " "
+            }
+          }
+        }
+      }
+    },
+    "1747811742337": {
+      "id": "1747811742337",
+      "type": "manyGroup",
+      "name": "I turn red",
+      "maxMark": "2",
+      "options": {
+        "1747811744135": {
+          "id": "1747811744135",
+          "type": "many",
+          "name": "when my point totals don't line up",
+          "mark": "1",
+          "selectedString": " ",
+          "unselectedString": " "
+        },
+        "1747811779927": {
+          "id": "1747811779927",
+          "type": "many",
+          "name": "(How does my parent get to 2 marks?)",
+          "mark": "0",
+          "selectedString": " ",
+          "unselectedString": " "
+        }
+      }
+    },
+    "1747811983397": {
+      "id": "1747811983397",
+      "type": "singleGroup",
+      "name": "If the label text is empty...",
+      "maxMark": "1",
+      "options": {
+        "1747811997095": {
+          "id": "1747811997095",
+          "type": "manyGroup",
+          "name": "",
+          "maxMark": "1",
+          "options": {
+            "1747812000087": {
+              "id": "1747812000087",
+              "type": "singleGroup",
+              "name": "",
+              "maxMark": "1",
+              "options": {
+                "1747812000816": {
+                  "id": "1747812000816",
+                  "type": "manyGroup",
+                  "name": "",
+                  "maxMark": "1",
+                  "options": {
+                    "1747812001575": {
+                      "id": "1747812001575",
+                      "type": "singleGroup",
+                      "name": "",
+                      "maxMark": "1",
+                      "options": {
+                        "1747812002194": {
+                          "id": "1747812002194",
+                          "type": "manyGroup",
+                          "name": "",
+                          "maxMark": "1",
+                          "options": {
+                            "1747812009308": {
+                              "id": "1747812009308",
+                              "type": "many",
+                              "name": "Or no feedback text (The default has a space)",
+                              "mark": "1",
+                              "selectedString": "Then feedback is not produced.",
+                              "unselectedString": ""
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "manyGroup",
+  "name": "Overall",
+  "maxMark": "8"
+}

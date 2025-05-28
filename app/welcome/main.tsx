@@ -6,6 +6,7 @@ import RubricContext from "~/context";
 import type { FormAction, dispatch, NodeId } from "~/context";
 import _ from "lodash";
 import { exportRubric, goToTop, ShortCuts, useImportRubric } from "~/shortcuts";
+import defaultRubric from "./tutorialRubric.json"
 const {set, get, isFunction, unset} = _
 
 const blankManyGroup: ManyOptionGroup = {
@@ -38,13 +39,7 @@ const blankSingleOption: SingleOption = {
   selectedString: ' ',
   unselectedString: ' ',
 }
-const defaultRubric: rubricJson = {
-  id: 'root',
-  type: 'manyGroup',
-  name: 'Overall',
-  maxMark: '1',
-  options: {}
-}
+
 
 function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const newParentList = [...parent, group.id]
