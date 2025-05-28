@@ -322,7 +322,7 @@ function RubricTree({}) {
   , state)
   const maxActualMarks = mapState((s, n, fs:Record<string, number>) => {
     return (n.type === 'many' || n.type === 'single') 
-    ?  +n.mark 
+    ?  Math.max(+n.mark, 0)
     : (n.type === 'manyGroup')
     ? Object.keys(n.options).reduce((p, c) => p + fs[c], 0)
     : Math.max(...Object.keys(n.options).map(k => fs[k]))
