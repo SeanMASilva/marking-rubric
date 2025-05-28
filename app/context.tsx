@@ -15,6 +15,33 @@ type RubricContext = {
   questionTotal: Record<NodeId, number>,
   maxActualMarks: Record<NodeId, number>,
 }
-const RubricContext = createContext<RubricContext>({state: {}, isEditing: false} as RubricContext)
+const RubricContext = createContext<RubricContext>({
+  state: {},
+  dispatch: (a) => {},
+  isEditing: false,
+  questionTotal: {},
+  maxActualMarks: {},
+})
+
+type ShortCutContext = {
+  copy:string,
+  edit:string,  
+  save:string,
+  top: string,
+  jump_down:string,
+  jump_up:string,
+}
+const defaultShortCutContext:ShortCutContext = {
+  copy:'Ctrl+c',
+  edit:'Ctrl+e',
+  save:'Ctrl+s',
+  top: 'Ctrl+g',
+  jump_down:'e',
+  jump_up:'q',
+}
+const ShortCutContext = createContext<ShortCutContext>(defaultShortCutContext)
+
+
 export default RubricContext
+export { ShortCutContext, defaultShortCutContext }
 export type {dispatch, FormAction, NodeId}

@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useEffect, useReducer, useRef, useState, type MouseEventHandler } from "react";
+import React, { useContext, useEffect, useReducer, useRef, useState, type MouseEventHandler } from "react";
 import {OptionMarking_, RadioInput, Button, Label, GroupMarking_, Row} from "~/styled"
 import { TextEdit, NumberEdit, deleteRed, TextAreaEdit, SaveRubric } from "~/ui";
-import RubricContext from "~/context";
+import RubricContext, { defaultShortCutContext, ShortCutContext }from "~/context";
 import type { FormAction, dispatch, NodeId } from "~/context";
 import _ from "lodash";
 import { exportRubric, goToTop, ShortCuts, useImportRubric } from "~/shortcuts";
@@ -66,8 +66,15 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
     }
   }
 
+  function moveToBottom(e:any) {
+    const newId = Date.now().toString()
+    const newGroup:Group =  {...group, id:newId}
+    handleDelete(1)
+    dispatch({type:'set', id: [...optionTree, newId], value:newGroup})
+  }
+
   return (
-    <GroupMarking_ depth={parent.length} style={{backgroundColor: invalidMaxMarks ? deleteRed : undefined}}>
+    <GroupMarking_ depth={parent.length} style={{backgroundColor: invalidMaxMarks ? deleteRed : undefined}} tabIndex={-1}>
       <Row>
         <TextEdit id={[...optionTree, group.id, 'name']}></TextEdit>
         <p style={{width:'0.5em'}}/>[{questionTotal[group.id]}/<NumberEdit id={[...optionTree, group.id, 'maxMark']}/>]
@@ -80,6 +87,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
       {isEditing && <>
         <Row>
           <Button onClick={addPoint}>Add Point</Button>
+          <Button onClick={moveToBottom}>To Bottom</Button>
           <Button onClick={addGroup(group.type)}>Add {group.type === 'manyGroup' ? 'Single Choice' : 'MultiChoice'} Section</Button>
           {group.id === 'root' ?
             <Button onClick={addGroup('singleGroup')}>Add Mutli Choice Section</Button> :
@@ -104,6 +112,14 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
   function handleDelete(e:any) {
     dispatch({type:'unset', id: [...optionTree, option.id], value:undefined})
   }
+
+  function moveToBottom(e:any) {
+    const newId = Date.now().toString()
+    const newOption:Option =  {...option, id:newId}
+    handleDelete(1)
+    dispatch({type:'set', id: [...optionTree, newId], value:newOption})
+  }
+
 
   useEffect(() => {
     dispatch({type:'mark', id: [...parent, option.id], value:false})
@@ -140,6 +156,9 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
           <TextAreaEdit  id={[...optionTree, option.id, 'unselectedString']} inputProps={{id:option.id + 'unselectedString'}}/>
         </Row>}
         <Row>
+          <Button onClick={moveToBottom}>
+            To Bottom
+          </Button>
           <Button 
             onClick={handleDelete}
             style={{backgroundColor:`light-dark(#e44,${deleteRed})`}}
@@ -334,19 +353,21 @@ function RubricTree({}) {
       dispatch,
       isEditing: !!state.isEditing,
       questionTotal,
-      maxActualMarks
+      maxActualMarks,
     }}>
-      <div style={{display:'flex', flexDirection:'row'}}>
-        <div style={{display:'flex', flexDirection:'column', padding: '8px', width:state.isEditing ? '100%' : '50%'}}>
-          <Row>
-            <ButtonRow />
-          </Row>
-          <RenderGroup group={state.root} parent={[]}/>
-        </div>
-        {!state.isEditing && <div style={{padding: '8px', width:'50%'}}>
-          <FeedBack />
-        </div>}
-      </div>
+        <ShortCutContext.Provider value={defaultShortCutContext}>
+          <div style={{display:'flex', flexDirection:'row'}}>
+            <div style={{display:'flex', flexDirection:'column', padding: '8px', width:state.isEditing ? '100%' : '50%'}}>
+              <Row>
+                <ButtonRow />
+              </Row>
+              <RenderGroup group={state.root} parent={[]}/>
+            </div>
+            {!state.isEditing && <div style={{padding: '8px', width:'50%'}}>
+              <FeedBack />
+            </div>}
+          </div>
+        </ShortCutContext.Provider>
     </RubricContext.Provider>
   )
 }

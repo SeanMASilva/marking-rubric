@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react"
-import RubricContext from "./context"
+import RubricContext, { ShortCutContext } from "./context"
 import { Button, Card } from "./styled"
 
 function getCleanRubric(state: Record<string, any>): rubricJson {
@@ -7,11 +7,24 @@ function getCleanRubric(state: Record<string, any>): rubricJson {
   return cleanState
 }
 
+function evaluateShortCutString(string:string): (e:KeyboardEvent) => boolean {
+  const sections = string.split("+")
+  const evalSection = (e:KeyboardEvent, str:string) => {
+    if (str === 'shift') return e.shiftKey
+    if (str === 'alt') return e.altKey
+    if (str === 'ctrl') return e.ctrlKey || e.metaKey
+    else return str === e.key.toLocaleLowerCase()
+  }
+  return e => sections.reduce((prev:boolean, curr:string) => prev && evalSection(e, curr.trim().toLowerCase()), true)
+}
+
 function useToggleEdit() {
   const {state, dispatch} = useContext(RubricContext)
+  const {edit} = useContext(ShortCutContext)
+  const validEvent = evaluateShortCutString(edit)
   useEffect(() => {
     const f = (e:KeyboardEvent) => {
-      if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
+      if (validEvent(e)) {
         e.preventDefault()
         dispatch({value: !state.isEditing, type:'set', id:'isEditing'})
       }
@@ -30,9 +43,11 @@ function goToTop() {
 
 
 function useGoToTop() {
+  const {top} = useContext(ShortCutContext)
+  const validEvent = evaluateShortCutString(top)
   useEffect(() => {
     const f = (e:KeyboardEvent) => {
-      if (e.key === 'g' && (e.ctrlKey || e.metaKey)) {
+      if (validEvent(e)) {
         e.preventDefault()
         goToTop()
       }
@@ -49,9 +64,11 @@ function saveRubric(state: Record<string,any>) {
 
 function useSaveRubric() {
   const {state} = useContext(RubricContext)
+  const {save} = useContext(ShortCutContext)
+  const validEvent = evaluateShortCutString(save)
   useEffect(() => {
     const f = (e:KeyboardEvent) => {
-      if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+      if (validEvent(e)) {
         e.preventDefault()
         saveRubric(state)
       }
@@ -105,10 +122,96 @@ function useImportRubric() {
   return {importRubric}
 }
 
+function useGroupJumpUp() {
+  const { state } = useContext(RubricContext)
+  const {jump_up} = useContext(ShortCutContext)
+  const validEvent = evaluateShortCutString(jump_up)
+useEffect(() => {
+  const f = (e:KeyboardEvent) => {
+    if (validEvent(e)) {
+      const currId = document.activeElement?.id
+
+      if (!currId) return
+
+      const getNextId = (group:Group, candidate:string|null): [string|null, string|null, string|null] => {
+
+        return Object.values<Group|Option>(group.options).reduce(([currCandidate, nextCandidate, res]:[string|null, string|null, string|null], node) => {
+          if (res) return [null, null, res]
+          if (node.id === currId) return [null, null, currCandidate]
+          if (node.type === 'many' || node.type === 'single') {
+            return [currCandidate, node.id, res]
+          }
+          const [_, next, res_]  = getNextId(node, nextCandidate || currCandidate)
+          return [next, next, res_]
+        }, [candidate, null, null])
+
+      }
+      const [_, __, nextId] = getNextId(state.root, null)
+      console.log(nextId)
+      const elem = document.querySelector(`[id="${nextId}"]`) as HTMLInputElement
+      elem?.focus()
+    }
+  }
+  document.addEventListener("keydown", f)
+
+  return () => document.removeEventListener('keydown', f)
+}, [state])
+  
+}
+
+
+function useGroupJumpDown() {
+  const { state } = useContext(RubricContext)
+  const {jump_down} = useContext(ShortCutContext)
+  const validEvent = evaluateShortCutString(jump_down)
+
+  useEffect(() => {
+    const f = (e:KeyboardEvent) => {
+      if (validEvent(e)) {
+        
+        const currId = document.activeElement?.id
+        if (!currId) return
+       
+        
+        const getNextId = (group:Group, parentId:string|null, nextId:string|null):[string|null, string|null] => {
+          if (nextId) {
+            return [parentId, nextId]
+          }
+          return Object.entries<Group|Option>(group.options).reduce(([pid, nid]:[string|null, string|null], [id, curr]:[string, Group|Option]) => {
+            if (nid) return [pid, nid]
+            else if (curr.type === 'many' || curr.type === 'single') {
+              if (group.id === pid) {
+                return [pid, nid]
+              } else if (id === currId) {
+                return [group.id, null]
+              } else if (pid) {
+                return [pid, id]
+              } else {
+                return [pid, nid]
+              }
+            }
+            else {
+              return getNextId(curr, pid, nid)
+            }
+          }, [parentId, nextId])
+        } 
+
+        const [_, nextId]  = getNextId(state.root, null, null)
+        const elem = document.querySelector(`[id="${nextId}"]`) as HTMLInputElement
+        elem?.focus()
+      }
+    }
+    document.addEventListener('keydown', f)
+    return () => document.removeEventListener('keydown', f)
+  }, [state])
+}
+
 function ShortCuts({}) {
   useGoToTop()
   useSaveRubric()
   useToggleEdit()
+  useGroupJumpDown()
+  useGroupJumpUp()
 
   const modalRef = useRef<HTMLDialogElement>(null)
   return (
@@ -121,6 +224,8 @@ function ShortCuts({}) {
         <p>Ctrl + C: Copy generated feedback to clipboard</p>
         <p>Ctrl + G: Focus the top check box</p>
         <p>Ctrl + E: Toggle Edit mode</p>
+        <p>E: Jump down to next group</p>
+        <p>Q: Jump up to previous group</p>
       </Card>
     </>
   )
