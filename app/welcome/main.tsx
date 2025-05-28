@@ -7,39 +7,8 @@ import type { FormAction, dispatch, NodeId } from "~/context";
 import _ from "lodash";
 import { exportRubric, goToTop, ShortCuts, useImportRubric } from "~/shortcuts";
 import defaultRubric from "./tutorialRubric.json"
+import { newManyGroup, newManyOption, newSingleGroup, newSingleOption } from "~/defaultRubricItems";
 const {set, get, isFunction, unset} = _
-
-const blankManyGroup: ManyOptionGroup = {
-  id: '',
-  type:'manyGroup',
-  name: 'Label',
-  maxMark: '1',
-  options: {} // Replace these objects to avoid mutation issues.
-}
-const blankSingleGroup: SingleOptionGroup = {
-  id: '',
-  type:'singleGroup',
-  name: 'Label',
-  maxMark: '1',
-  options: {}
-}
-const blankManyOption: ManyOption = {
-  id: '',
-  type: 'many',
-  name: 'Label',
-  mark: '1',
-  selectedString: ' ',
-  unselectedString: ' ',
-}
-const blankSingleOption: SingleOption = {
-  id: '',
-  type: 'single',
-  name: 'Label',
-  mark: '1',
-  selectedString: ' ',
-  unselectedString: ' ',
-}
-
 
 function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const newParentList = [...parent, group.id]
@@ -49,9 +18,8 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const invalidMaxMarks = maxActualMarks[group.id].toString() !== group.maxMark
 
   function addPoint(e:any) {
-    const newId = Date.now().toString()
-    const newOption: Option = group.type === 'manyGroup' ? {...blankManyOption, id:newId} : {...blankSingleOption, id:newId}
-    dispatch({type:'set', id: [...optionTree, group.id, 'options', newId], value:newOption})
+    const newOption: Option = group.type === 'manyGroup' ? newManyOption() : newSingleOption()
+    dispatch({type:'set', id: [...optionTree, group.id, 'options', newOption.id], value:newOption})
   }
   
   function handleDelete(e:any) {
@@ -60,9 +28,8 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
 
   function addGroup(type: 'manyGroup' | 'singleGroup') {
     return (e:any) => {
-      const newId = Date.now().toString()
-      const newGroup: Group = {...(type === 'manyGroup' ? blankSingleGroup : blankManyGroup), id:newId, options: {}}
-      dispatch({type:'set', id: [...optionTree, group.id, 'options', newId], value:newGroup})
+      const newGroup: Group = type === 'manyGroup' ? newSingleGroup() : newManyGroup()
+      dispatch({type:'set', id: [...optionTree, group.id, 'options', newGroup.id], value:newGroup})
     }
   }
 
