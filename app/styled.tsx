@@ -1,7 +1,11 @@
 import styled from "styled-components";
 import React from "react";
 
-const OptionMarking_ = styled.div`
+type TreeProps = {
+  depth:number
+}
+
+const OptionMarking_ = styled.div<TreeProps>`
   padding: 4px 8px;
   display: flex;
   flex-direction: column;
@@ -9,10 +13,13 @@ const OptionMarking_ = styled.div`
   background-color: light-dark(#${props => `${((15 - props?.depth) || 16)?.toString(16).repeat(3)}`},#${props => `${props.depth?.toString(16).repeat(3)}`});
 `;
 
-const GroupMarking_ = styled.div`
+const GroupMarking_ = styled.div<TreeProps>`
   padding: 8px 0 0 1em;
   border: solid 1px #404040;
   background-color: light-dark(#${props => `${((15 - props?.depth) || 16)?.toString(16).repeat(3)}`},#${props => `${props.depth?.toString(16).repeat(3)}`});
+  &:focus {
+    
+  }
 `;
 const RadioInput = styled.input`
 margin-right: 8px;
