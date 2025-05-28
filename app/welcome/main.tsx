@@ -213,14 +213,14 @@ function FeedBack({}){
     }
   })
   useEffect(() => {
-    const copy = (e:KeyboardEvent) => {
+    const copy = async (e:KeyboardEvent) => {
       if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault()
         const data = new ClipboardItem({
           "text/plain": (feedBack.root[0]),
           "text/html": (richFeedBack.root[0])
         })
-        navigator.clipboard.write([data])
+        await navigator.clipboard.write([data])
       }
     }
     document.addEventListener('keydown', copy)
@@ -233,16 +233,16 @@ function FeedBack({}){
     <>
       <h2>Generated Feedback</h2>
       <Row>
-        <Button onClick={e => {
+        <Button onClick={async e => {
           const data = new ClipboardItem({
             "text/plain": (feedBack.root[0]),
             "text/html": (richFeedBack.root[0])
           })
-          navigator.clipboard.write([data])
+          await navigator.clipboard.write([data])
         }}>Copy Text</Button>
         <Button onClick={goToTop}>To Top</Button>
       </Row>
-      <div dangerouslySetInnerHTML={{__html: richFeedBack.root}} />
+      <div dangerouslySetInnerHTML={{__html: richFeedBack.root[0]}} />
     </>
   )
 }
