@@ -15,7 +15,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const optionTree = parent.flatMap(str => [str, 'options'])
   const {questionTotal, maxActualMarks, isEditing, dispatch} = useContext(RubricContext)
 
-  const invalidMaxMarks = maxActualMarks[group.id].toString() !== group.maxMark
+  const invalidMaxMarks = maxActualMarks[group.id].toString() !== group.maxMark &&  isEditing || questionTotal[group.id] > +group.maxMark
 
   function addPoint(e:any) {
     const newOption: Option = group.type === 'manyGroup' ? newManyOption() : newSingleOption()
@@ -46,7 +46,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
         <TextEdit id={[...optionTree, group.id, 'name']}></TextEdit>
         <p style={{width:'0.5em'}}/>[{questionTotal[group.id]}/<NumberEdit id={[...optionTree, group.id, 'maxMark']}/>]
       </Row>
-      {Object.values(group.options).sort((a, b) => a.id - b.id).map(option => ['many', 'single'].includes(option.type)  
+      {Object.values<Option|Group>(group.options).sort((a, b) => +a.id - +b.id).map(option => option.type === 'single'  || option.type === 'many'
         ? <RenderOption option={option} key={option.id} parent={newParentList}/> 
         : <RenderGroup group={option} key={option.id} parent={newParentList}/>
       )}
@@ -192,10 +192,10 @@ function FeedBack({}){
     if (n.type === 'many' || n.type === 'single') {
       const maxMark = n.type === 'many' ? n.mark : findParent(state.root, n)?.maxMark
       if (s === true) return n.selectedString ? ["<p><strong>" + n.name + ": </strong>" + n.selectedString + ` <strong>[${n.mark}/${maxMark}]</strong></p>`] : []
-      else if (s === false) return n.unselectedString ? ["<p><strong>" + n.name + ":</strong> " + n.unselectedString + ` <strong>[0/${maxMark}]</strong></p>`] : []
+      else if (s === false) return n.unselectedString ? ["<p><strong>" + n.name + ": </strong> " + n.unselectedString + ` <strong>[0/${maxMark}]</strong></p>`] : []
       else return []
     } else {
-      return Object.values(s).length ? [[...[n.name ? ("<h3>" + n.name + ` [${questionTotal[n.id]}/${n.maxMark}]` + "</h3>"): []], ...Object.keys(n.options).map(key => fs[key])].join("\n")] : []
+      return Object.values(s).length ? [[...[n.name ? ("<h3>" + n.name + ` [${questionTotal[n.id]}/${n.maxMark}]` + "</h3>"): []], (n.type === 'manyGroup' ? '<ul>' : '') + [...Object.keys(n.options).map(key => fs[key])].join("\n") + (n.type === 'manyGroup' ? '</ul>' : '')].join("\n")] : []
     }
   })
   useEffect(() => {

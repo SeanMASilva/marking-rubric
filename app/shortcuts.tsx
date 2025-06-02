@@ -122,20 +122,23 @@ function useImportRubric() {
   return {importRubric}
 }
 
+type groupJump2 = [string|null, string|null]
+type groupJump3 = [string|null, string|null, string|null]
+
 function useGroupJumpUp() {
-  const { state } = useContext(RubricContext)
+  const { state, isEditing } = useContext(RubricContext)
   const {jump_up} = useContext(ShortCutContext)
   const validEvent = evaluateShortCutString(jump_up)
 useEffect(() => {
   const f = (e:KeyboardEvent) => {
-    if (validEvent(e)) {
+    if (validEvent(e) && !isEditing) {
       const currId = document.activeElement?.id
 
       if (!currId) return
 
-      const getNextId = (group:Group, candidate:string|null): [string|null, string|null, string|null] => {
+      const getNextId = (group:Group, candidate:string|null): groupJump3=> {
 
-        return Object.values<Group|Option>(group.options).reduce(([currCandidate, nextCandidate, res]:[string|null, string|null, string|null], node) => {
+        return Object.values<Group|Option>(group.options).sort((a, b) => +a.id - +b.id).reduce(([currCandidate, nextCandidate, res]:groupJump3, node) => {
           if (res) return [null, null, res]
           if (node.id === currId) return [null, null, currCandidate]
           if (node.type === 'many' || node.type === 'single') {
@@ -147,7 +150,6 @@ useEffect(() => {
 
       }
       const [_, __, nextId] = getNextId(state.root, null)
-      console.log(nextId)
       const elem = document.querySelector(`[id="${nextId}"]`) as HTMLInputElement
       elem?.focus()
     }
@@ -161,31 +163,31 @@ useEffect(() => {
 
 
 function useGroupJumpDown() {
-  const { state } = useContext(RubricContext)
+  const { state, isEditing } = useContext(RubricContext)
   const {jump_down} = useContext(ShortCutContext)
   const validEvent = evaluateShortCutString(jump_down)
 
   useEffect(() => {
     const f = (e:KeyboardEvent) => {
-      if (validEvent(e)) {
+      if (validEvent(e) && !isEditing) {
         
         const currId = document.activeElement?.id
         if (!currId) return
        
         
-        const getNextId = (group:Group, parentId:string|null, nextId:string|null):[string|null, string|null] => {
+        const getNextId = (group:Group, parentId:string|null, nextId:string|null):groupJump2 => {
           if (nextId) {
             return [parentId, nextId]
           }
-          return Object.entries<Group|Option>(group.options).reduce(([pid, nid]:[string|null, string|null], [id, curr]:[string, Group|Option]) => {
+          return Object.values<Group|Option>(group.options).sort((a, b) => +a.id - +b.id).reduce(([pid, nid]:groupJump2, curr:Group|Option):groupJump2 => {
             if (nid) return [pid, nid]
             else if (curr.type === 'many' || curr.type === 'single') {
               if (group.id === pid) {
                 return [pid, nid]
-              } else if (id === currId) {
+              } else if (curr.id === currId) {
                 return [group.id, null]
               } else if (pid) {
-                return [pid, id]
+                return [pid, curr.id]
               } else {
                 return [pid, nid]
               }
