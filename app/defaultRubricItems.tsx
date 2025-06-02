@@ -1,11 +1,3 @@
-const blankManyGroup: ManyOptionGroup = {
-  id: '',
-  type:'manyGroup',
-  name: 'Label',
-  maxMark: '1',
-  options: {} // Replace these objects to avoid mutation issues.
-}
-
 const newManyGroup = ():ManyOptionGroup => ({
   id: Date.now().toString(),
   type:'manyGroup',
@@ -13,13 +5,6 @@ const newManyGroup = ():ManyOptionGroup => ({
   maxMark:'1',
   options:{}
 })
-const blankSingleGroup: SingleOptionGroup = {
-  id: '',
-  type:'singleGroup',
-  name: 'Label',
-  maxMark: '1',
-  options: {}
-}
 
 const newSingleGroup = ():SingleOptionGroup => {
   const newId = Date.now()
@@ -41,32 +26,14 @@ const newSingleGroup = ():SingleOptionGroup => {
   })
 }
 
-const blankManyOption: ManyOption = {
-  id: '',
-  type: 'many',
-  name: 'Label',
-  mark: '1',
-  selectedString: ' ',
-  unselectedString: ' ',
-}
-
 const newManyOption = ():ManyOption => ({
-  id: '',
+  id: Date.now().toString(),
   type: 'many',
   name: 'Label',
   mark: '1',
   selectedString: ' ',
   unselectedString: ' ',
 })
-
-const blankSingleOption: SingleOption = {
-  id: Date.now().toString(),
-  type: 'single',
-  name: 'Label',
-  mark: '1',
-  selectedString: ' ',
-  unselectedString: ' ',
-}
 
 const newSingleOption = (): SingleOption  => ({
   id: Date.now().toString(),
