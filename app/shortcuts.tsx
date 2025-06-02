@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react"
-import RubricContext, { ShortCutContext } from "./context"
+import RubricContext, { ShortCutContext, type dispatch, type NodeId } from "./context"
 import { Button, Card } from "./styled"
 
 function getCleanRubric(state: Record<string, any>): rubricJson {
@@ -158,6 +158,35 @@ useEffect(() => {
   
 }
 
+function useResetState(path:NodeId[]) {
+  const { state, flatTree, dispatch } = useContext(RubricContext)
+  return () => resetState(path, state, dispatch, flatTree)
+}
+
+function resetState(path:NodeId[], state:Record<string,any>, dispatch:dispatch, flatTree:Record<NodeId, Group|Option>) {
+  const parent:Group = path.reduce((prev, curr):Group => flatTree[curr].type === 'manyGroup' || flatTree[curr].type === 'singleGroup' ? flatTree[curr] : prev, state.root)
+  const newValue = parent.id === 'root' ? {...state.root, ...unselectedValue(parent) as Object} : unselectedValue(parent)
+
+  dispatch({type:'mark', id:path, value: newValue})
+}
+
+type rubricSelectedState = boolean | undefined | {[key:NodeId]: rubricSelectedState}
+
+function unselectedValue(node:Group|Option): rubricSelectedState{
+  switch (node.type) {
+    case ('many'):
+      return false
+    case ('single'):
+      return false
+    case ('manyGroup'):
+      return Object.fromEntries(Object.entries(node.options).map(([k,v]) => [k, unselectedValue(v)]))
+    case ('singleGroup'):
+      const child = Object.keys(node.options).at(-1) as string
+      return {[child]:unselectedValue(node.options[child])}
+  }
+
+}
+
 
 function useGroupJumpDown() {
   const { state, isEditing } = useContext(RubricContext)
@@ -230,4 +259,4 @@ function ShortCuts({}) {
   )
 }
 
-export {goToTop, useGoToTop, saveRubric, useSaveRubric, exportRubric, useImportRubric, ShortCuts}
+export {goToTop, useGoToTop, useResetState, saveRubric, useSaveRubric, exportRubric, useImportRubric, ShortCuts}

@@ -5,7 +5,7 @@ import { TextEdit, NumberEdit, deleteRed, TextAreaEdit, SaveRubric } from "~/ui"
 import RubricContext, { defaultShortCutContext, ShortCutContext }from "~/context";
 import type { FormAction, NodeId } from "~/context";
 import { set, get, unset } from "lodash";
-import { exportRubric, goToTop, ShortCuts, useImportRubric } from "~/shortcuts";
+import { exportRubric, goToTop, ShortCuts, useImportRubric, useResetState } from "~/shortcuts";
 import defaultRubric from "./tutorialRubric.json"
 import { newManyGroup, newManyOption, newSingleGroup, newSingleOption } from "~/defaultRubricItems";
 import { findParent, mapState } from "~/util";
@@ -15,6 +15,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const newParentList = [...parent, group.id]
   const optionTree = parent.flatMap(str => [str, 'options'])
   const {questionTotal, maxActualMarks, isEditing, dispatch} = useContext(RubricContext)
+  const resetGroup = useResetState(newParentList)
 
   const invalidMaxMarks = maxActualMarks[group.id].toString() !== group.maxMark &&  isEditing || questionTotal[group.id] > +group.maxMark
 
@@ -42,10 +43,11 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   }
 
   return (
-    <GroupMarking_ depth={parent.length} style={{backgroundColor: invalidMaxMarks ? deleteRed : undefined}} tabIndex={-1}>
+    <GroupMarking_ depth={parent.length} style={{backgroundColor: invalidMaxMarks ? deleteRed : undefined}}>
       <Row>
         <TextEdit id={[...optionTree, group.id, 'name']}></TextEdit>
         <p style={{width:'0.5em'}}/>[{questionTotal[group.id]}/<NumberEdit id={[...optionTree, group.id, 'maxMark']}/>]
+        <Button onClick={resetGroup}></Button>
       </Row>
       {Object.values<Option|Group>(group.options).sort((a, b) => +a.id - +b.id).map(option => option.type === 'single'  || option.type === 'many'
         ? <RenderOption option={option} key={option.id} parent={newParentList}/> 
@@ -241,7 +243,7 @@ const reducer:formReducer = (state, action) => {
   if (action.type === 'mark') {
     set(newState, action.id, action.value)
     // Make sure or values are unique in the group
-    const orCheck = (state:any, path:any, node:Group|Option):any => {
+    const orCheck = (state:any, path:NodeId[], node:Group|Option):any => {
       const [id, ...restPath] = path
       if (!id) return state
       node = node as Group
@@ -267,8 +269,9 @@ function RubricTree({}) {
 
   const rubric: rubricJson = JSON.parse(window.localStorage.getItem("rubric") as string) || defaultRubric
 
-  const [state, dispatch] = useReducer(reducer, {root:rubric, isEditing:false})
+  const [state, dispatch] = useReducer(reducer, {root:rubric})
   
+  console.log(state)
   const questionTotal = mapState((s, n, fs:Record<string, number>) => {
     return (n.type === 'many' || n.type === 'single') 
     ? s === true
@@ -283,6 +286,7 @@ function RubricTree({}) {
     ? Object.keys(n.options).reduce((p, c) => p + fs[c], 0)
     : Math.max(...Object.keys(n.options).map(k => fs[k]))
   }, state)
+  const flatTree = mapState<Group|Option>((s, n, fs) => n, state)
 
   return (
     <RubricContext.Provider value={{
@@ -291,6 +295,7 @@ function RubricTree({}) {
       isEditing: !!state.isEditing,
       questionTotal,
       maxActualMarks,
+      flatTree,
     }}>
         <ShortCutContext.Provider value={defaultShortCutContext}>
           <div style={{display:'flex', flexDirection:'row'}}>
