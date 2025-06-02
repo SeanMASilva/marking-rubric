@@ -39,9 +39,6 @@ function goToTop() {
   firstCheckBox?.focus() 
 }
 
-
-
-
 function useGoToTop() {
   const {top} = useContext(ShortCutContext)
   const validEvent = evaluateShortCutString(top)

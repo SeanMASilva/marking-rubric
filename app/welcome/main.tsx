@@ -3,12 +3,13 @@ import React, { useContext, useEffect, useReducer, useRef, useState, type MouseE
 import {OptionMarking_, RadioInput, Button, Label, GroupMarking_, Row} from "~/styled"
 import { TextEdit, NumberEdit, deleteRed, TextAreaEdit, SaveRubric } from "~/ui";
 import RubricContext, { defaultShortCutContext, ShortCutContext }from "~/context";
-import type { FormAction, dispatch, NodeId } from "~/context";
-import _ from "lodash";
+import type { FormAction, NodeId } from "~/context";
+import { set, get, unset } from "lodash";
 import { exportRubric, goToTop, ShortCuts, useImportRubric } from "~/shortcuts";
 import defaultRubric from "./tutorialRubric.json"
 import { newManyGroup, newManyOption, newSingleGroup, newSingleOption } from "~/defaultRubricItems";
-const {set, get, isFunction, unset} = _
+import { findParent, mapState } from "~/util";
+
 
 function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
   const newParentList = [...parent, group.id]
@@ -75,7 +76,7 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
   const {state, dispatch, isEditing} = useContext(RubricContext)
   const optionTree = parent.flatMap(str => [str, 'options'])
   const checked = get(state, [...parent, option.id], false)
-  // const node = get(state, [...optionTree, option.id], {})
+
   function handleDelete(e:any) {
     dispatch({type:'unset', id: [...optionTree, option.id], value:undefined})
   }
@@ -139,7 +140,7 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
 }
 
 function ButtonRow({}) {
-  const {state} = useContext(RubricContext)
+  const { state } = useContext(RubricContext)
   const { importRubric } = useImportRubric()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -175,7 +176,7 @@ function ToggleEdit({}) {
 }
 
 function FeedBack({}){
-  const {state, questionTotal, dispatch} = useContext(RubricContext)
+  const { state, questionTotal } = useContext(RubricContext)
   
 
   const feedBack = mapState<string[]>((s, n, fs, d) => {
@@ -261,37 +262,6 @@ const reducer:formReducer = (state, action) => {
   }
   return newState
 }
-
-type stateMap<T> = (state: any, node: Group|Option, flatState: Record<NodeId, T>, depth ?: number) => T
-
-function mapState<T>(f:stateMap<T>, defaultState ?: any) {
-  const {state: state_} = useContext(RubricContext)
-  const state = defaultState || state_
-  const mapF = (f:stateMap<T>, state:any, node:Group|Option, flatState:Record<string, any>, depth:number):Record<string, T> => {
-    if (node.type === 'many'  || node.type === 'single') {
-      return {[node.id]: f(state, node, flatState)}
-    } else {
-      const nextNodes = Object.entries<Group|Option>(node.options)
-      const childrenFlatState: Record<string, T> = {...flatState, 
-        ...nextNodes.reduce((prev, [key, node]) => ({...prev, ...mapF(f, get(state, key, {}), node, flatState, depth + 1)}), {})
-      }
-
-      return {...childrenFlatState, [node.id]:f(state, node, childrenFlatState)}
-      
-    }
-  }
-
-  return mapF(f, state.root, state.root, {}, 0)
-}
-
-const findParent = (state:Group, node:Group | Option): Group|null => {
-  if (!state.options) return null
-  else if (state.options[node.id]) return state
-  else {
-    return Object.values(state.options).reduce((prev, curr) => prev || findParent(curr, node),null )
-  }
-}
-
 
 function RubricTree({}) {
 

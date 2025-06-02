@@ -5,7 +5,7 @@ type SingleOptionGroup =  {
   id: string;
   name?: string;
   maxMark: string;
-  options: Record<string, SingleOption | ManyOptionGroup>;
+  options: Record<string,Group | Option>;
 }
 
 type ManyOptionGroup = {
@@ -13,7 +13,7 @@ type ManyOptionGroup = {
   id: string;
   name?: string;
   maxMark: string;
-  options: Record<string, ManyOption | ManyOptionGroup | SingleOptionGroup>;
+  options: Record<string, Group|Option>;
 }
 
 // type SingleOption = Option & {type: 'single'}
