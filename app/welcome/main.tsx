@@ -3,8 +3,8 @@ import React, { useContext, useEffect, useReducer, useRef, useState, type MouseE
 import {OptionMarking_, RadioInput, Button, Label, GroupMarking_, Row} from "~/styled"
 import { TextEdit, NumberEdit, deleteRed, TextAreaEdit, SaveRubric } from "~/ui";
 import RubricContext, { defaultShortCutContext, ShortCutContext }from "~/context";
-import type { FormAction, NodeId } from "~/context";
-import { set, get, unset } from "lodash";
+import type { FormAction, NodeId, RubricTreeType } from "~/context";
+import { set, get, unset, setWith } from "lodash";
 import { exportRubric, goToTop, ShortCuts, useImportRubric, useResetState } from "~/shortcuts";
 import defaultRubric from "./tutorialRubric.json"
 import { newManyGroup, newManyOption, newSingleGroup, newSingleOption } from "~/defaultRubricItems";
@@ -47,7 +47,7 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
       <Row>
         <TextEdit id={[...optionTree, group.id, 'name']}></TextEdit>
         <p style={{width:'0.5em'}}/>[{questionTotal[group.id]}/<NumberEdit id={[...optionTree, group.id, 'maxMark']}/>]
-        <Button onClick={resetGroup}></Button>
+        <Button onClick={resetGroup} style={{padding:'0 8px', marginLeft:'auto'}} tabIndex={-1}>R</Button>
       </Row>
       {Object.values<Option|Group>(group.options).sort((a, b) => +a.id - +b.id).map(option => option.type === 'single'  || option.type === 'many'
         ? <RenderOption option={option} key={option.id} parent={newParentList}/> 
@@ -75,9 +75,9 @@ function RenderGroup({group, parent} : {group: Group, parent: NodeId[]}) {
 }
 
 function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
-  const {state, dispatch, isEditing} = useContext(RubricContext)
+  const {rubricTree, dispatch, isEditing} = useContext(RubricContext)
   const optionTree = parent.flatMap(str => [str, 'options'])
-  const checked = get(state, [...parent, option.id], false)
+  const checked = get(rubricTree.selectedValue, [...parent, option.id], false)
 
   function handleDelete(e:any) {
     dispatch({type:'unset', id: [...optionTree, option.id], value:undefined})
@@ -93,7 +93,7 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
 
   useEffect(() => {
     dispatch({type:'mark', id: [...parent, option.id], value:false})
-  }, [state.rerender])
+  }, [rubricTree.rerender])
 
   return (
     <OptionMarking_ depth={parent.length}>
@@ -142,7 +142,7 @@ function RenderOption({option, parent} : {option: Option, parent: NodeId[]}) {
 }
 
 function ButtonRow({}) {
-  const { state } = useContext(RubricContext)
+  const { rubricTree } = useContext(RubricContext)
   const { importRubric } = useImportRubric()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -151,7 +151,7 @@ function ButtonRow({}) {
       <ToggleEdit />
       <SaveRubric />
       <Button onClick={e => {
-        exportRubric(state)
+        exportRubric(rubricTree)
       }}
       >
         Export Rubric
@@ -168,22 +168,22 @@ function ButtonRow({}) {
 }
 
 function ToggleEdit({}) {
-  const {state, dispatch} = useContext(RubricContext)
+  const {rubricTree, dispatch} = useContext(RubricContext)
   
   return (
-    <Button onClick={e => dispatch({value: !state.isEditing, type:'set', id:'isEditing'})}>
+    <Button onClick={e => dispatch({value: !rubricTree.isEditing, type:'set', id:'isEditing'})}>
       Edit Rubric
     </Button>
   )
 }
 
 function FeedBack({}){
-  const { state, questionTotal } = useContext(RubricContext)
+  const { rubricTree, questionTotal } = useContext(RubricContext)
   
 
   const feedBack = mapState<string[]>((s, n, fs, d) => {
     if (n.type === 'many' || n.type === 'single') {
-      const maxMark = n.type === 'many' ? n.mark : findParent(state.root, n)?.maxMark
+      const maxMark = n.type === 'many' ? n.mark : findParent(rubricTree.root, n.id)?.maxMark
       if (s === true) return n.selectedString ? [n.name + ": " + n.selectedString + `[${n.mark}/${maxMark}]`] : []
       else if (s === false) return n.unselectedString ? [n.name + ": " + n.unselectedString + `[0/${maxMark}]`] : [n.name + ` [0/${n.mark}]`]
       else return []
@@ -193,7 +193,7 @@ function FeedBack({}){
   })
   const richFeedBack = mapState<string[]>((s, n, fs, d) => {
     if (n.type === 'many' || n.type === 'single') {
-      const maxMark = n.type === 'many' ? n.mark : findParent(state.root, n)?.maxMark
+      const maxMark = n.type === 'many' ? n.mark : findParent(rubricTree.root, n.id)?.maxMark
       if (s === true) return n.selectedString ? ["<p><strong>" + n.name + ": </strong>" + n.selectedString + ` <strong>[${n.mark}/${maxMark}]</strong></p>`] : []
       else if (s === false) return n.unselectedString ? ["<p><strong>" + n.name + ": </strong> " + n.unselectedString + ` <strong>[0/${maxMark}]</strong></p>`] : []
       else return []
@@ -214,7 +214,7 @@ function FeedBack({}){
     }
     document.addEventListener('keydown', copy)
     return () => document.removeEventListener('keydown', copy)
-  }, [state.root])
+  }, [rubricTree.root])
 
 
 
@@ -237,11 +237,11 @@ function FeedBack({}){
 }
 
 
-type formReducer = (state: Record<string, any>, {id, value, type}: FormAction) => Record<string,any>
+type formReducer = (state: RubricTreeType, {id, value, type}: FormAction) => RubricTreeType
 const reducer:formReducer = (state, action) => {
   const newState = {...state}
   if (action.type === 'mark') {
-    set(newState, action.id, action.value)
+    set(newState, ['selectedValue', ...action.id], action.value)
     // Make sure or values are unique in the group
     const orCheck = (state:any, path:NodeId[], node:Group|Option):any => {
       const [id, ...restPath] = path
@@ -253,9 +253,10 @@ const reducer:formReducer = (state, action) => {
         return {[id]: orCheck(nextValue, restPath, nextNode)}
       }
       const defaultChecked = Object.fromEntries(Object.entries(node.options).map(([key, _]) => ([key, false])))
-      return {...defaultChecked, ...state, [id]:orCheck(nextValue, restPath, nextNode)}
+      const retObj = {...defaultChecked, ...state, [id]:orCheck(nextValue, restPath, nextNode)}
+      return retObj
     }
-    return {...newState, root: {...newState.root, ...orCheck(newState.root, action.id.slice(1), newState.root)}}
+    return {...newState, selectedValue:{root:orCheck(newState.selectedValue.root, action.id.slice(1), newState.root)}}
   }
   else if (action.type === 'set') {
     set(newState, action.id, action.value)
@@ -269,43 +270,42 @@ function RubricTree({}) {
 
   const rubric: rubricJson = JSON.parse(window.localStorage.getItem("rubric") as string) || defaultRubric
 
-  const [state, dispatch] = useReducer(reducer, {root:rubric})
+  const [rubricTree, dispatch] = useReducer(reducer, {root:rubric, selectedValue:undefined})
   
-  console.log(state)
   const questionTotal = mapState((s, n, fs:Record<string, number>) => {
     return (n.type === 'many' || n.type === 'single') 
     ? s === true
       ? +n.mark 
       : 0 
     : Object.keys(n.options).reduce((p, c) => p + fs[c], 0)}
-  , state)
+  , rubricTree)
   const maxActualMarks = mapState((s, n, fs:Record<string, number>) => {
     return (n.type === 'many' || n.type === 'single') 
     ?  Math.max(+n.mark, 0)
     : (n.type === 'manyGroup')
     ? Object.keys(n.options).reduce((p, c) => p + fs[c], 0)
     : Math.max(...Object.keys(n.options).map(k => fs[k]))
-  }, state)
-  const flatTree = mapState<Group|Option>((s, n, fs) => n, state)
+  }, rubricTree)
+  const flatTree = mapState<Group|Option>((s, n, fs) => n, rubricTree)
 
   return (
     <RubricContext.Provider value={{
-      state,
+      rubricTree,
       dispatch,
-      isEditing: !!state.isEditing,
+      isEditing: !!rubricTree.isEditing,
       questionTotal,
       maxActualMarks,
       flatTree,
     }}>
         <ShortCutContext.Provider value={defaultShortCutContext}>
           <div style={{display:'flex', flexDirection:'row'}}>
-            <div style={{display:'flex', flexDirection:'column', padding: '8px', width:state.isEditing ? '100%' : '50%'}}>
+            <div style={{display:'flex', flexDirection:'column', padding: '8px', width:rubricTree.isEditing ? '100%' : '50%'}}>
               <Row>
                 <ButtonRow />
               </Row>
-              <RenderGroup group={state.root} parent={[]}/>
+              <RenderGroup group={rubricTree.root} parent={[]}/>
             </div>
-            {!state.isEditing && <div style={{padding: '8px', width:'50%'}}>
+            {!rubricTree.isEditing && <div style={{padding: '8px', width:'50%'}}>
               <FeedBack />
             </div>}
           </div>

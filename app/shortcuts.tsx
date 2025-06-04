@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import RubricContext, { ShortCutContext, type dispatch, type NodeId } from "./context"
 import { Button, Card } from "./styled"
+import { getNodePathFromId, unselectedValue } from "./util"
 
 function getCleanRubric(state: Record<string, any>): rubricJson {
   const cleanState:rubricJson = {id: 'root', options: {...state.root.options}, type:'manyGroup', name:state.root.name, maxMark:state.root.maxMark}
@@ -19,19 +20,19 @@ function evaluateShortCutString(string:string): (e:KeyboardEvent) => boolean {
 }
 
 function useToggleEdit() {
-  const {state, dispatch} = useContext(RubricContext)
+  const {rubricTree, dispatch} = useContext(RubricContext)
   const {edit} = useContext(ShortCutContext)
   const validEvent = evaluateShortCutString(edit)
   useEffect(() => {
     const f = (e:KeyboardEvent) => {
       if (validEvent(e)) {
         e.preventDefault()
-        dispatch({value: !state.isEditing, type:'set', id:'isEditing'})
+        dispatch({value: !rubricTree.isEditing, type:'set', id:'isEditing'})
       }
     }
     document.addEventListener('keydown', f)
     return () => document.removeEventListener('keydown', f)
-  }, [state])
+  }, [rubricTree])
 }
 
 function goToTop() {
@@ -60,19 +61,19 @@ function saveRubric(state: Record<string,any>) {
 }
 
 function useSaveRubric() {
-  const {state} = useContext(RubricContext)
+  const {rubricTree} = useContext(RubricContext)
   const {save} = useContext(ShortCutContext)
   const validEvent = evaluateShortCutString(save)
   useEffect(() => {
     const f = (e:KeyboardEvent) => {
       if (validEvent(e)) {
         e.preventDefault()
-        saveRubric(state)
+        saveRubric(rubricTree)
       }
     }
     document.addEventListener("keydown", f)
     return () => document.removeEventListener('keydown', f)
-  }, [state.root])
+  }, [rubricTree.root])
 }
 
 function exportRubric(state: Record<string,any>) {
@@ -91,12 +92,8 @@ function exportRubric(state: Record<string,any>) {
 }
 
 function useImportRubric() {
-  const {state, dispatch} = useContext(RubricContext)
-  // const importRubric = (rubric:rubricJson) => {
-  //   window.localStorage.setItem('rubric', JSON.stringify(rubric))
-  //   dispatch({type:'set', id:'root', value:rubric})
-  //   dispatch({type: 'set', id:'rerender', value: !state.rerender})
-  // }
+  const {rubricTree, dispatch} = useContext(RubricContext)
+
   async function importRubric(e:React.ChangeEvent<HTMLInputElement>) {
       if (!e.target.files) return
       const file = e.target.files[0]
@@ -112,7 +109,7 @@ function useImportRubric() {
       })
       // window.localStorage.setItem('rubric', JSON.stringify(rubric))
       dispatch({type:'set', id:'root', value:rubric})
-      dispatch({type: 'set', id:'rerender', value: !state.rerender})
+      dispatch({type: 'set', id:'rerender', value: !rubricTree.rerender})
       
     }
 
@@ -123,73 +120,74 @@ type groupJump2 = [string|null, string|null]
 type groupJump3 = [string|null, string|null, string|null]
 
 function useGroupJumpUp() {
-  const { state, isEditing } = useContext(RubricContext)
+  const { rubricTree, isEditing } = useContext(RubricContext)
   const {jump_up} = useContext(ShortCutContext)
   const validEvent = evaluateShortCutString(jump_up)
-useEffect(() => {
-  const f = (e:KeyboardEvent) => {
-    if (validEvent(e) && !isEditing) {
-      const currId = document.activeElement?.id
+  useEffect(() => {
+    const f = (e:KeyboardEvent) => {
+      if (validEvent(e) && !isEditing) {
+        const currId = document.activeElement?.id
 
-      if (!currId) return
+        if (!currId) return
 
-      const getNextId = (group:Group, candidate:string|null): groupJump3=> {
+        const getNextId = (group:Group, candidate:string|null): groupJump3=> {
 
-        return Object.values<Group|Option>(group.options).sort((a, b) => +a.id - +b.id).reduce(([currCandidate, nextCandidate, res]:groupJump3, node) => {
-          if (res) return [null, null, res]
-          if (node.id === currId) return [null, null, currCandidate]
-          if (node.type === 'many' || node.type === 'single') {
-            return [currCandidate, node.id, res]
-          }
-          const [_, next, res_]  = getNextId(node, nextCandidate || currCandidate)
-          return [next, next, res_]
-        }, [candidate, null, null])
+          return Object.values<Group|Option>(group.options).sort((a, b) => +a.id - +b.id).reduce(([currCandidate, nextCandidate, res]:groupJump3, node) => {
+            if (res) return [null, null, res]
+            if (node.id === currId) return [null, null, currCandidate]
+            if (node.type === 'many' || node.type === 'single') {
+              return [currCandidate, node.id, res]
+            }
+            const [_, next, res_]  = getNextId(node, nextCandidate || currCandidate)
+            return [next, next, res_]
+          }, [candidate, null, null])
 
+        }
+        const [_, __, nextId] = getNextId(rubricTree.root, null)
+        const elem = document.querySelector(`[id="${nextId}"]`) as HTMLInputElement
+        elem?.focus()
       }
-      const [_, __, nextId] = getNextId(state.root, null)
-      const elem = document.querySelector(`[id="${nextId}"]`) as HTMLInputElement
-      elem?.focus()
     }
-  }
-  document.addEventListener("keydown", f)
+    document.addEventListener("keydown", f)
 
-  return () => document.removeEventListener('keydown', f)
-}, [state])
+    return () => document.removeEventListener('keydown', f)
+  }, [rubricTree])
   
 }
 
 function useResetState(path:NodeId[]) {
-  const { state, flatTree, dispatch } = useContext(RubricContext)
-  return () => resetState(path, state, dispatch, flatTree)
+  const { rubricTree, flatTree, dispatch } = useContext(RubricContext)
+  return () => resetState(path, rubricTree, dispatch, flatTree)
 }
 
-function resetState(path:NodeId[], state:Record<string,any>, dispatch:dispatch, flatTree:Record<NodeId, Group|Option>) {
-  const parent:Group = path.reduce((prev, curr):Group => flatTree[curr].type === 'manyGroup' || flatTree[curr].type === 'singleGroup' ? flatTree[curr] : prev, state.root)
-  const newValue = parent.id === 'root' ? {...state.root, ...unselectedValue(parent) as Object} : unselectedValue(parent)
+function resetState(path:NodeId[], rubricTree:Record<string,any>, dispatch:dispatch, flatTree:Record<NodeId, Group|Option>) {
+  const parent:Group = path.reduce((prev, curr):Group => flatTree[curr].type === 'manyGroup' || flatTree[curr].type === 'singleGroup' ? flatTree[curr] : prev, rubricTree.root)
+  const newValue = parent.id === 'root' ? {...rubricTree.root, ...unselectedValue(parent) as Object} : unselectedValue(parent)
 
   dispatch({type:'mark', id:path, value: newValue})
 }
 
-type rubricSelectedState = boolean | undefined | {[key:NodeId]: rubricSelectedState}
+function useResetStateShortcut() {
+  const { rubricTree, dispatch, flatTree, isEditing } = useContext(RubricContext)
+  const { resetGroup } = useContext(ShortCutContext)
+  const validEvent = evaluateShortCutString(resetGroup)
+  useEffect(() => {
+    const f = (e:KeyboardEvent) => {
+      if (validEvent(e) && !isEditing) {
+        const currId = document.activeElement?.id
+        if (!currId) return
 
-function unselectedValue(node:Group|Option): rubricSelectedState{
-  switch (node.type) {
-    case ('many'):
-      return false
-    case ('single'):
-      return false
-    case ('manyGroup'):
-      return Object.fromEntries(Object.entries(node.options).map(([k,v]) => [k, unselectedValue(v)]))
-    case ('singleGroup'):
-      const child = Object.keys(node.options).at(-1) as string
-      return {[child]:unselectedValue(node.options[child])}
-  }
-
+        const pathToParent = getNodePathFromId(rubricTree.root, currId).slice(undefined, -1)
+        resetState(pathToParent.map(n => n.id), rubricTree, dispatch, flatTree)
+      }
+    }
+    document.addEventListener('keydown', f)
+    return () => document.removeEventListener('keydown', f)
+  }, [rubricTree])
 }
 
-
 function useGroupJumpDown() {
-  const { state, isEditing } = useContext(RubricContext)
+  const { rubricTree, isEditing } = useContext(RubricContext)
   const {jump_down} = useContext(ShortCutContext)
   const validEvent = evaluateShortCutString(jump_down)
 
@@ -224,14 +222,14 @@ function useGroupJumpDown() {
           }, [parentId, nextId])
         } 
 
-        const [_, nextId]  = getNextId(state.root, null, null)
+        const [_, nextId]  = getNextId(rubricTree.root, null, null)
         const elem = document.querySelector(`[id="${nextId}"]`) as HTMLInputElement
         elem?.focus()
       }
     }
     document.addEventListener('keydown', f)
     return () => document.removeEventListener('keydown', f)
-  }, [state])
+  }, [rubricTree])
 }
 
 function ShortCuts({}) {
@@ -240,6 +238,7 @@ function ShortCuts({}) {
   useToggleEdit()
   useGroupJumpDown()
   useGroupJumpUp()
+  useResetStateShortcut()
 
   const modalRef = useRef<HTMLDialogElement>(null)
   return (
@@ -252,6 +251,7 @@ function ShortCuts({}) {
         <p>Ctrl + C: Copy generated feedback to clipboard</p>
         <p>Ctrl + G: Focus the top check box</p>
         <p>Ctrl + E: Toggle Edit mode</p>
+        <p>Shift+ R: Reset section to empty</p>
         <p>E: Jump down to next group</p>
         <p>Q: Jump up to previous group</p>
       </Card>

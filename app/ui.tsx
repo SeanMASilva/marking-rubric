@@ -29,8 +29,8 @@ function NumberEdit({id, children, labelId, inputProps} : {id: string[], childre
 }
 type EditChild = (value: string) => React.ReactNode
 function TextEdit({id, children, labelId, inputProps} : {id: string[], children?:EditChild, labelId?:string, inputProps?:any}) {
-  const {state, dispatch, isEditing} = useContext(RubricContext)
-  const value = get(state, id, "")
+  const {rubricTree, dispatch, isEditing} = useContext(RubricContext)
+  const value = get(rubricTree, id, "")
   return( 
     <>
       {isEditing 
@@ -47,8 +47,8 @@ function TextEdit({id, children, labelId, inputProps} : {id: string[], children?
 }
 
 function TextAreaEdit({id, children, labelId, inputProps} : {id: string[], children?:EditChild, labelId?:string, inputProps?:any}) {
-  const {state, dispatch, isEditing} = useContext(RubricContext)
-  const value = get(state, id, "")
+  const {rubricTree, dispatch, isEditing} = useContext(RubricContext)
+  const value = get(rubricTree, id, "")
   return( 
     <>
       {isEditing 
@@ -65,9 +65,9 @@ function TextAreaEdit({id, children, labelId, inputProps} : {id: string[], child
 }
 
 function SaveRubric({}) {
-  const {state} = useContext(RubricContext)
+  const {rubricTree} = useContext(RubricContext)
   return (
-    <Button onClick={() => saveRubric(state)}>Save Rubric</Button>
+    <Button onClick={() => saveRubric(rubricTree)}>Save Rubric</Button>
   )
 }
 

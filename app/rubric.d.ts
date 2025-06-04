@@ -38,3 +38,7 @@ type ManyOption = {
   unselectedString ?: string;
   checked?: boolean;
 }
+
+interface RubricGroupSelected extends Record<string, RubricSelectedState> {}
+type RubricOptionSelected = boolean | undefined
+type RubricSelectedState = RubricGroupSelected | RubricOptionSelected | any

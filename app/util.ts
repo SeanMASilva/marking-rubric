@@ -3,18 +3,26 @@ import RubricContext from "./context"
 import type { NodeId } from "./context"
 import { get } from "lodash"
 
-const findParent = (state:Group|Option, node:Group | Option): Group|null => {
-  if (state.type === 'many' || state.type === 'single') return null
-  else if (state.options[node.id]) return state
-  else {
-    return Object.values<Group|Option>(state.options).reduce((prev:null|Group, curr) => prev || findParent(curr, node),null )
-  }
+const findParent = (state:Group|Option, id: NodeId): Group|null => {
+  const path = getNodePathFromId(state, id, [])
+  const parent = path.at(-2) as Group
+  return parent || null
+}
+
+const getNodePathFromId = (state:Group|Option, id:NodeId, path:(Group|Option)[] = []) : (Group|Option)[] => {
+  const newPath = [...path, state]
+  if (state.id === id) return newPath
+  else if (state.type === 'many' || state.type === 'single') return []
+  else return Object.values<Group|Option>(state.options).reduce((prev:(Group|Option)[],curr) => {
+    const subPath = getNodePathFromId(curr, id, newPath)
+    return subPath.length ? subPath : prev
+  }, [])
 }
 
 type stateMap<T> = (state: any, node: Group|Option, flatState: Record<NodeId, T>, depth ?: number) => T
 
 function mapState<T>(f:stateMap<T>, defaultState ?: any) {
-  const {state: state_} = useContext(RubricContext)
+  const {rubricTree: state_} = useContext(RubricContext)
   const state = defaultState || state_
   const mapF = (f:stateMap<T>, state:any, node:Group|Option, flatState:Record<string, any>, depth:number):Record<string, T> => {
     if (node.type === 'many'  || node.type === 'single') {
@@ -30,8 +38,21 @@ function mapState<T>(f:stateMap<T>, defaultState ?: any) {
     }
   }
 
-  return mapF(f, state.root, state.root, {}, 0)
+  return mapF(f, get(state, 'selectedValue.root', {}), state.root, {}, 0)
 }
 
+function unselectedValue(node:Group|Option): RubricSelectedState{
+  switch (node.type) {
+    case ('many'):
+      return false
+    case ('single'):
+      return false
+    case ('manyGroup'):
+      return Object.fromEntries(Object.entries(node.options).map(([k,v]) => [k, unselectedValue(v)]))
+    case ('singleGroup'):
+      const child = Object.keys(node.options).at(-1) as string
+      return {[child]:unselectedValue(node.options[child])}
+  }
+}
 
-export { findParent, mapState}
+export { findParent, getNodePathFromId, mapState, unselectedValue }

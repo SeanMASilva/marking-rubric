@@ -1,4 +1,6 @@
 import { createContext } from "react";
+import tutorialRubic from "./welcome/tutorialRubric.json"
+
 
 type FormAction = {
   type: 'set' | 'unset',
@@ -10,13 +12,12 @@ type FormAction = {
   value: any
 }
 
-type rubricSelectedState = boolean | undefined | {[key:NodeId]: rubricSelectedState}
+type RubricTreeType = {root:rubricJson, selectedValue:RubricSelectedState} & Record<string, any>
 
 type NodeId = string
 type dispatch = ({type, id, value}:FormAction) => void
 type RubricContext = {
-  state: Record<string, any>,
-  value: rubricSelectedState
+  rubricTree: RubricTreeType
   dispatch:  dispatch,
   isEditing: boolean,
   questionTotal: Record<NodeId, number>,
@@ -24,8 +25,7 @@ type RubricContext = {
   flatTree: Record<NodeId, Group|Option>
 }
 const RubricContext = createContext<RubricContext>({
-  state: {},
-  value: {},
+  rubricTree: {root:tutorialRubic as rubricJson, selectedValue:undefined},
   dispatch: (a) => {},
   isEditing: false,
   questionTotal: {},
@@ -38,7 +38,7 @@ type ShortCutContext = {
   edit: string,  
   save: string,
   top : string,
-  reset:string,
+  resetGroup:string,
   jump_down:string,
   jump_up : string,
 }
@@ -47,7 +47,7 @@ const defaultShortCutContext:ShortCutContext = {
   edit: 'Ctrl+e',
   save: 'Ctrl+s',
   top:  'Ctrl+g',
-  reset:'Shift+r',
+  resetGroup:'Shift+r',
   jump_down:'e',
   jump_up:'q',
 }
@@ -56,4 +56,4 @@ const ShortCutContext = createContext<ShortCutContext>(defaultShortCutContext)
 
 export default RubricContext
 export { ShortCutContext, defaultShortCutContext }
-export type {dispatch, FormAction, NodeId}
+export type {dispatch, FormAction, NodeId, RubricContext, RubricTreeType}
