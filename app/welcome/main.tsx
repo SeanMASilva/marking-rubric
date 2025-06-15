@@ -209,7 +209,7 @@ function FeedBack({}){
           "text/plain": (feedBack.root[0]),
           "text/html": (richFeedBack.root[0])
         })
-        await navigator.clipboard.write([data])
+        navigator.clipboard.write([data])
       }
     }
     document.addEventListener('keydown', copy)
