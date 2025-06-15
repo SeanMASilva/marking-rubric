@@ -214,7 +214,7 @@ function FeedBack({}){
     }
     document.addEventListener('keydown', copy)
     return () => document.removeEventListener('keydown', copy)
-  }, [rubricTree.root])
+  }, [rubricTree.root, rubricTree.selectedValue])
 
 
 
