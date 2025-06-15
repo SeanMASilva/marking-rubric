@@ -20,3 +20,7 @@ h2 {
   font-weight: 600;
   font-size: larger;
 }
+
+ul {
+  margin-left: 1em;
+}
